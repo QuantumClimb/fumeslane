@@ -13,10 +13,10 @@ const Contact = () => {
   const { t } = useLanguage();
   
   useSEO({
-    title: 'Contact Us | Namaste Curry House - Get in Touch',
-    description: 'Contact Namaste Curry House for reservations, catering, or inquiries. Call +351920617185 or email namastecurrylisboa@gmail.com. We are here to serve you.',
-    keywords: 'contact Indian restaurant, restaurant phone number, Indian restaurant location, restaurant hours, catering inquiries',
-    canonicalUrl: 'https://www.namastecurry.house/contact'
+    title: 'Contact Us | FumesLane - Get in Touch',
+    description: 'Contact FumesLane for perfume inquiries, orders, or customer support. Email us for premium fragrance assistance.',
+    keywords: 'contact perfume store, fragrance inquiries, perfume customer support, perfume shop contact',
+    canonicalUrl: 'https://www.fumeslane.com/contact'
   });
   const [formData, setFormData] = useState({
     name: "",

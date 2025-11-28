@@ -2,8 +2,8 @@
   "nav": {
     "ourStory": "Our Story",
     "menu": "Menu",
+    "shop": "Shop",
     "gallery": "Gallery",
-    "reservation": "Reservation",
     "contact": "Contact",
     "switchLanguage": "Switch to Portuguese"
   },
@@ -238,7 +238,7 @@
   },
   "footer": {
     "about": "About",
-    "aboutText": "Experience authentic Indian cuisine in the heart of Lisboa. Traditional recipes, warm hospitality, and unforgettable flavors.",
+    "aboutText": "Discover luxury perfumes and fragrances at FumesLane. Curated scents for every personality.",
     "quickLinks": "Quick Links",
     "ourStory": "Our Story",
     "menu": "Menu",

@@ -1,4 +1,4 @@
-// Prisma schema for Namaste Curry House (Production - PostgreSQL/Neon)
+// Prisma schema for FumesLane Perfume Store (Production - PostgreSQL/Neon)
 
 datasource db {
   provider = "postgresql"
@@ -9,27 +9,46 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model MenuCategory {
-  id        Int        @id @default(autoincrement())
+model ProductCategory {
+  id        Int      @id @default(autoincrement())
   name      String
-  items     MenuItem[]
+  products  Product[]
 }
 
-model MenuItem {
-  id                      Int      @id @default(autoincrement())
-  name                    String
-  namePt                  String?      // Portuguese translation of name
-  description             String
-  descriptionPt           String?      // Portuguese translation of description
-  price                   Float
-  dietary                 String   // comma-separated dietary tags
-  hasSpiceCustomization   Boolean  @default(false) // Toggle for spice level customization
-  categoryId              Int
-  category                MenuCategory @relation(fields: [categoryId], references: [id])
-  imageUrl                String?      // Legacy: External image URL
-  imageData               String?      // Base64 encoded image data stored in Neon
-  imageMimeType           String?      // MIME type (image/jpeg, image/png, etc.)
-  imageSize               Int?         // Image size in bytes
+model Product {
+  id                Int              @id @default(autoincrement())
+  name              String
+  namePt            String?          // Portuguese translation of name
+  description       String
+  descriptionPt     String?          // Portuguese translation of description
+  price             Float
+  
+  // Perfume-specific fields
+  brand             String?
+  volume            Float?           // Volume in ml (e.g., 50, 100)
+  concentration     String?          // EDP, EDT, Parfum, Cologne, etc.
+  gender            String?          // Male, Female, Unisex
+  fragranceFamily   String?          // Floral, Oriental, Woody, Fresh, etc.
+  topNotes          String?          // Comma-separated top notes
+  middleNotes       String?          // Comma-separated middle notes
+  baseNotes         String?          // Comma-separated base notes
+  
+  // Inventory
+  stockQuantity     Int              @default(0)
+  inStock           Boolean          @default(true)
+  
+  // Category
+  categoryId        Int
+  category          ProductCategory  @relation(fields: [categoryId], references: [id])
+  
+  // Images
+  imageUrl          String?          // External image URL
+  imageData         String?          // Base64 encoded image data
+  imageMimeType     String?          // MIME type (image/jpeg, image/png, etc.)
+  imageSize         Int?             // Image size in bytes
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }
 
 model Customer {
@@ -70,9 +89,9 @@ model Order {
   
   // Payment Information
   paymentMethod         PaymentMethod
-  stripePaymentIntentId String?       @unique
-  stripeChargeId        String?
-  stripeSessionId       String?       @unique // Stripe Checkout Session ID
+  razorpayOrderId       String?       @unique  // Razorpay Order ID
+  razorpayPaymentId     String?       @unique  // Razorpay Payment ID
+  razorpaySignature     String?                // Payment verification signature
   
   // Timestamps
   createdAt             DateTime      @default(now())
@@ -89,9 +108,8 @@ model Order {
 enum OrderStatus {
   PENDING       // Order created, payment pending
   CONFIRMED     // Payment received
-  PREPARING     // Kitchen is preparing
-  READY         // Ready for delivery/pickup
-  IN_TRANSIT    // Out for delivery
+  PROCESSING    // Order being processed
+  SHIPPED       // Package shipped
   DELIVERED     // Successfully delivered
   CANCELLED     // Order cancelled
 }
@@ -105,10 +123,9 @@ enum PaymentStatus {
 }
 
 enum PaymentMethod {
-  WHATSAPP      // Order via WhatsApp
-  STRIPE_CARD   // Stripe credit/debit card
-  STRIPE_IDEAL  // Future: iDEAL payment
-  CASH          // Future: Cash on delivery
+  RAZORPAY      // Razorpay payment gateway
+  CASH          // Cash on delivery
+  BANK_TRANSFER // Bank transfer
 }
 
 model StoreStatus {

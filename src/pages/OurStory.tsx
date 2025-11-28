@@ -10,10 +10,10 @@ const OurStory = () => {
   const { t } = useLanguage();
   
   useSEO({
-    title: 'Namaste Curry House | Authentic Indian Restaurant & Food Delivery',
-    description: 'Experience authentic Indian flavors at Namaste Curry House. Order tandoori, curries, biryani & vegetarian dishes online. Traditional recipes, fresh ingredients, delivered to your door.',
-    keywords: 'authentic Indian restaurant, Indian food delivery, order Indian food online, tandoori, curry, biryani, vegetarian Indian food, best Indian restaurant',
-    canonicalUrl: 'https://www.namastecurry.house/'
+    title: 'FumesLane | Luxury Perfumes & Fragrances Online',
+    description: 'Discover premium perfumes and fragrances at FumesLane. Shop designer scents, niche brands, and exclusive fragrances with fast delivery.',
+    keywords: 'luxury perfume, designer fragrances, niche perfumes, buy perfume online, fragrance store, perfume shop',
+    canonicalUrl: 'https://www.fumeslane.com/'
   });
 
   const values = [

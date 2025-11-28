@@ -9,10 +9,7 @@ import { Navigation } from "./components/Navigation";
 import { WhatsAppButton } from "./components/WhatsAppButton";
 import { Footer } from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
-import OurStory from "./pages/OurStory";
 import Menu from "./pages/Menu";
-import Gallery from "./pages/Gallery";
-import Reservation from "./pages/Reservation";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
@@ -37,10 +34,8 @@ const AppContent = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <Routes>
-          <Route path="/" element={<OurStory />} />
-          <Route path="/menu" element={<Menu />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/reservation" element={<Reservation />} />
+          <Route path="/" element={<Menu />} />
+          <Route path="/shop" element={<Menu />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/checkout" element={<Checkout />} />

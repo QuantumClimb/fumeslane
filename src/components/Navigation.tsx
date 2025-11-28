@@ -45,28 +45,25 @@ export const Navigation = () => {
   const isStoreClosed = storeStatus?.isOpen === false;
 
   const navigation = [
-    { name: t('nav.ourStory'), href: "/" },
-    { name: t('nav.menu'), href: "/menu" },
-    { name: t('nav.gallery'), href: "/gallery" },
-    { name: t('nav.reservation'), href: "/reservation" },
+    { name: t('nav.shop'), href: "/" },
     { name: t('nav.contact'), href: "/contact" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-border" style={{ backgroundColor: '#000000' }}>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 md:h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3" aria-label="Namaste Curry House Home">
+            <Link to="/" className="flex items-center space-x-3" aria-label="FumesLane Home">
               <img
                 src="/logo.png"
-                alt="Namaste Curry House Logo"
+                alt="FumesLane Logo"
                 className="h-14 w-14 md:h-12 md:w-12 object-contain drop-shadow-md"
                 loading="eager"
               />
-              <span className="text-2xl font-bold hidden md:inline" style={{ color: '#D4AF37', fontFamily: 'Forum, serif' }}>Namaste Curry House</span>
+              <span className="text-2xl font-bold hidden md:inline text-gray-900" style={{ fontFamily: 'Forum, serif' }}>FumesLane</span>
             </Link>
           </div>
           
@@ -79,51 +76,46 @@ export const Navigation = () => {
                     to={item.href}
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                       isActive(item.href)
-                        ? "text-white neon-glow"
-                        : "hover:bg-transparent"
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
-                    style={isActive(item.href) 
-                      ? { backgroundColor: '#D4AF37', color: 'white' }
-                      : { color: '#D4AF37' }
-                    }
                   >
                     {item.name}
                   </Link>
                 ))}
               </div>
-              <Button
+              {/* Language toggle hidden for now */}
+              {/* <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleLanguage}
-                className="px-3 py-2 text-sm font-medium hover:bg-transparent transition-all duration-300 flex items-center gap-2"
-                style={{ color: '#D4AF37' }}
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all duration-300 flex items-center gap-2"
                 title={t('nav.switchLanguage')}
               >
                 <Languages size={18} />
                 <span className="font-bold">{language === 'en' ? 'PT' : 'EN'}</span>
-              </Button>
+              </Button> */}
               {!isStoreClosed && <CartDrawer />}
             </div>
           </div>
           
           <div className="md:hidden flex items-center space-x-2">
-            <Button
+            {/* Language toggle hidden for now */}
+            {/* <Button
               variant="ghost"
               size="sm"
               onClick={toggleLanguage}
-              className="p-2 hover:bg-transparent transition-all duration-300"
-              style={{ color: '#D4AF37' }}
+              className="p-2 text-gray-700 hover:bg-gray-100 transition-all duration-300"
               title={t('nav.switchLanguage')}
             >
               <span className="text-sm font-bold">{language === 'en' ? 'PT' : 'EN'}</span>
-            </Button>
+            </Button> */}
             {!isStoreClosed && <CartDrawer />}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 hover:bg-transparent"
-              style={{ color: '#D4AF37' }}
+              className="p-2 text-gray-700 hover:bg-gray-100"
             >
               {isOpen ? <X size={40} /> : <Menu size={40} />}
             </Button>
@@ -134,20 +126,16 @@ export const Navigation = () => {
       {/* Mobile menu */}
       {isOpen && (
         <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 backdrop-blur-md" style={{ backgroundColor: '#000000' }}>
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
                 className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 ${
                   isActive(item.href)
-                    ? "text-white"
-                    : "hover:bg-transparent"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
-                style={isActive(item.href) 
-                  ? { backgroundColor: '#D4AF37', color: 'white' }
-                  : { color: '#D4AF37' }
-                }
                 onClick={() => setIsOpen(false)}
               >
                 {item.name}

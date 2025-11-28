@@ -168,7 +168,7 @@ const useCartStore = create<ExtendedCartStore>()(
       },
     }),
     {
-      name: 'namaste-curry-cart',
+      name: 'fumeslane-cart',
       version: 1,
     }
   )

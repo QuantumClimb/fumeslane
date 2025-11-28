@@ -11,9 +11,6 @@ import { QuantityStepper } from "../components/QuantityStepper";
 import { useItemCartQuantity } from "../hooks/useCartQuantity";
 import useCartStore from "../stores/cartStore";
 import { API_BASE_URL } from "../lib/apiConfig";
-import { SpiceLevelDialog } from "../components/SpiceLevelDialog";
-import { RepeatCustomizationDialog } from "../components/RepeatCustomizationDialog";
-import { CartCustomization } from "../types/cart";
 import { useMenuData } from "../hooks/useMenuData";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useSEO } from "../hooks/useSEO";
@@ -25,9 +22,6 @@ interface StoreStatus {
   closedMessage: string | null;
   reopenTime: string | null;
 }
-
-// Track last selected spice level for each menu item (outside component for persistence)
-const lastSpiceLevels = new Map<string, number>();
 
 const MenuSection = ({ items, title, isStoreClosed }: { items: MenuItem[], title: string, isStoreClosed: boolean }) => {
   const placeholderImg = "/images/placeholder-food.svg";
@@ -45,8 +39,6 @@ const MenuSection = ({ items, title, isStoreClosed }: { items: MenuItem[], title
 };
 
 const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem, placeholderImg: string, isStoreClosed: boolean }) => {
-  const [isSpiceDialogOpen, setIsSpiceDialogOpen] = useState(false);
-  const [isRepeatDialogOpen, setIsRepeatDialogOpen] = useState(false);
   const { t, tLegacy } = useLanguage();
   
   // Only subscribe to actions, not items (to avoid re-renders)
@@ -67,71 +59,16 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
   const displayDescription = tLegacy(item.description || '', item.descriptionPt);
 
   const handleAddToCart = () => {
-    // Check if item has spice customization enabled
-    if (item.hasSpiceCustomization === true) {
-      // Check if we've added this item before
-      const lastSpiceLevel = lastSpiceLevels.get(item.id);
-      
-      if (isInCart && lastSpiceLevel !== undefined) {
-        // Item already in cart and we have a previous spice level - show repeat dialog
-        setIsRepeatDialogOpen(true);
-      } else {
-        // First time adding or no previous spice level - show spice dialog
-        setIsSpiceDialogOpen(true);
-      }
-    } else {
-      // No customization needed - add directly
-      addItem(item, 1);
-    }
-  };
-
-  const handleSpiceLevelConfirm = (spiceLevel: number) => {
-    // Store the spice level for this menu item
-    lastSpiceLevels.set(item.id, spiceLevel);
-    
-    // Add item to cart with spice level
-    const customization: CartCustomization = {
-      spiceLevel
-    };
-    addItem(item, 1, customization);
-  };
-
-  const handleRepeatCustomization = () => {
-    // Use the same spice level as before
-    const lastSpiceLevel = lastSpiceLevels.get(item.id);
-    if (lastSpiceLevel !== undefined) {
-      const customization: CartCustomization = {
-        spiceLevel: lastSpiceLevel
-      };
-      addItem(item, 1, customization);
-    }
-    setIsRepeatDialogOpen(false);
-  };
-
-  const handleNewCustomization = () => {
-    // Close repeat dialog and open spice dialog for new selection
-    setIsRepeatDialogOpen(false);
-    setIsSpiceDialogOpen(true);
+    // Simply add item to cart - no customization needed for perfumes
+    addItem(item, 1);
   };
 
   const handleIncrement = () => {
-    // If item has spice customization, show repeat dialog instead of directly incrementing
-    if (item.hasSpiceCustomization === true) {
-      const lastSpiceLevel = lastSpiceLevels.get(item.id);
-      if (lastSpiceLevel !== undefined) {
-        // Show repeat dialog
-        setIsRepeatDialogOpen(true);
-      } else {
-        // No previous spice level, show spice dialog
-        setIsSpiceDialogOpen(true);
-      }
-    } else {
-      // No customization - directly increment
-      if (cartItemId) {
-        const currentCartItem = items.find(ci => ci.id === cartItemId);
-        if (currentCartItem) {
-          updateQuantity(cartItemId, currentCartItem.quantity + 1);
-        }
+    // Directly increment quantity
+    if (cartItemId) {
+      const currentCartItem = items.find(ci => ci.id === cartItemId);
+      if (currentCartItem) {
+        updateQuantity(cartItemId, currentCartItem.quantity + 1);
       }
     }
   };
@@ -177,12 +114,7 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
     <>
       {/* Mobile Layout - Horizontal Card */}
       <Card className="md:hidden bg-card/50 backdrop-blur-sm border-primary/20 neon-glow overflow-hidden group flex flex-row items-center p-3 relative menu-item-card">
-        {/* Dietary Indicator - Top Right */}
-        {item.dietary && item.dietary.length > 0 && (
-          <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-md" title={item.dietary.join(', ')} />
-        )}
-        
-        {/* Left: Food Image */}
+        {/* Left: Product Image */}
         <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-lg">
           <img
             src={imageUrl}
@@ -200,9 +132,6 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
           <p className="text-xs text-foreground/60 line-clamp-1 mb-2">{displayDescription}</p>
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-accent">€{item.price.toFixed(2)}</span>
-            {item.hasSpiceCustomization === true && (
-              <span className="text-xs">🌶️</span>
-            )}
           </div>
         </div>
 
@@ -231,7 +160,7 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
 
       {/* Desktop Layout - Vertical Card */}
       <Card className="hidden md:block bg-card/50 backdrop-blur-sm border-primary/20 neon-glow overflow-hidden group menu-item-card">
-        {/* Food Image */}
+        {/* Product Image */}
         <div className="relative h-48 overflow-hidden">
           <img
             src={imageUrl}
@@ -249,22 +178,8 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
             <span className="text-lg font-bold text-accent">€{item.price.toFixed(2)}</span>
           </div>
           <p className="text-foreground/70 mb-4 leading-relaxed">{displayDescription}</p>
-          {item.dietary && item.dietary.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {item.dietary.map((diet: string, idx: number) => (
-                <Badge key={idx} className="bg-primary/20 text-primary border-primary/30">
-                  {diet}
-                </Badge>
-              ))}
-            </div>
-          )}
           <div className="flex justify-between items-center gap-3">
             <div className="flex items-center space-x-2 flex-1 min-w-0">
-              {item.hasSpiceCustomization === true && (
-                <Badge variant="outline" className="text-xs">
-                  🌶️ Customizable
-                </Badge>
-              )}
               {item.namePt && (
                 <span className="text-sm text-muted-foreground italic truncate">{item.namePt}</span>
               )}
@@ -295,27 +210,6 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
           </div>
         </CardContent>
       </Card>
-
-      {/* Spice Customization Dialogs */}
-      {item.hasSpiceCustomization === true && (
-        <>
-          <SpiceLevelDialog
-            open={isSpiceDialogOpen}
-            onOpenChange={setIsSpiceDialogOpen}
-            onConfirm={handleSpiceLevelConfirm}
-            itemName={displayName}
-          />
-
-          <RepeatCustomizationDialog
-            open={isRepeatDialogOpen}
-            onOpenChange={setIsRepeatDialogOpen}
-            onRepeat={handleRepeatCustomization}
-            onCustomize={handleNewCustomization}
-            itemName={displayName}
-            previousSpiceLevel={lastSpiceLevels.get(item.id) || 0}
-          />
-        </>
-      )}
     </>
   );
 };
