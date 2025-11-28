@@ -5,6 +5,7 @@ import { Menu, X, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartDrawer } from "./CartDrawer";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ThemeToggle } from "./ThemeToggle";
 
 // Store status type
 interface StoreStatus {
@@ -46,13 +47,13 @@ export const Navigation = () => {
 
   const navigation = [
     { name: t('nav.shop'), href: "/" },
-    { name: t('nav.contact'), href: "/contact" },
+    // { name: t('nav.contact'), href: "/contact" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md border-b border-gray-200">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-black shadow-md border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 md:h-16">
           <div className="flex items-center">
@@ -63,7 +64,7 @@ export const Navigation = () => {
                 className="h-14 w-14 md:h-12 md:w-12 object-contain drop-shadow-md"
                 loading="eager"
               />
-              <span className="text-2xl font-bold hidden md:inline text-gray-900" style={{ fontFamily: 'Forum, serif' }}>FumesLane</span>
+              <span className="text-2xl font-bold hidden md:inline text-gray-900 dark:text-gray-500" style={{ fontFamily: 'Forum, serif' }}>FumesLane</span>
             </Link>
           </div>
           
@@ -95,6 +96,7 @@ export const Navigation = () => {
                 <Languages size={18} />
                 <span className="font-bold">{language === 'en' ? 'PT' : 'EN'}</span>
               </Button> */}
+              <ThemeToggle />
               {!isStoreClosed && <CartDrawer />}
             </div>
           </div>
@@ -110,6 +112,7 @@ export const Navigation = () => {
             >
               <span className="text-sm font-bold">{language === 'en' ? 'PT' : 'EN'}</span>
             </Button> */}
+            <ThemeToggle />
             {!isStoreClosed && <CartDrawer />}
             <Button
               variant="ghost"

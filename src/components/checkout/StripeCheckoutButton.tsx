@@ -82,16 +82,16 @@ export default function StripeCheckoutButton({
         <div className="space-y-3 p-4 bg-muted rounded-lg">
           <div className="flex justify-between text-sm">
             <span>Subtotal:</span>
-            <span>€{(total - 2.50).toFixed(2)}</span>
+            <span>₹{((total - 250) / 100).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Delivery:</span>
-            <span>€2.50</span>
+            <span>₹2.50</span>
           </div>
           <div className="h-px bg-border" />
           <div className="flex justify-between font-semibold text-lg">
             <span>Total:</span>
-            <span>€{total.toFixed(2)}</span>
+            <span>₹{(total / 100).toFixed(2)}</span>
           </div>
         </div>
 

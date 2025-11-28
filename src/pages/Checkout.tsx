@@ -297,17 +297,17 @@ export default function Checkout() {
                 </ul>
                 
                 <div className="border-t pt-3 space-y-2">
-                  <div className="flex justify-between">
-                    <span>{t('cart.subtotal')}:</span>
-                    <span>€{total.toFixed(2)}</span>
+                  <div className="flex justify-between py-2">
+                    <span>{t('checkout.subtotal')}:</span>
+                    <span>₹{(total / 100).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>{t('cart.deliveryFee')}:</span>
-                    <span>€{deliveryFee.toFixed(2)}</span>
+                  <div className="flex justify-between py-2">
+                    <span>{t('checkout.deliveryFee')}:</span>
+                    <span>₹{(deliveryFee / 100).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>{t('cart.total')}:</span>
-                    <span>€{grandTotal.toFixed(2)}</span>
+                  <div className="flex justify-between py-2 font-bold text-lg">
+                    <span>{t('checkout.total')}:</span>
+                    <span>₹{(grandTotal / 100).toFixed(2)}</span>
                   </div>
                 </div>
                 

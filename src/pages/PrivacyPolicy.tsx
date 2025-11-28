@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const PrivacyPolicy = () => {
   return (
@@ -12,7 +12,7 @@ const PrivacyPolicy = () => {
                 <strong>Last Updated:</strong> November 3, 2025
               </p>
               <p className="text-foreground/80 leading-relaxed">
-                At Namaste Curry House, we are committed to protecting your privacy and personal information. 
+                At FumesLane, we are committed to protecting your privacy and personal information. 
                 This Privacy Policy explains how we collect, use, disclose, and safeguard your information when 
                 you use our website and services.
               </p>
@@ -223,7 +223,7 @@ const PrivacyPolicy = () => {
               <ul className="list-none space-y-2 mt-4">
                 <li><strong>Email:</strong> namastecurrylisboa@gmail.com</li>
                 <li><strong>Phone:</strong> +351 920 617 185</li>
-                <li><strong>Address:</strong> R. Agostinho Lourenço 339, 1000-011 Lisboa, Portugal</li>
+                <li><strong>Address:</strong> R. Agostinho LourenÃ§o 339, 1000-011 Lisboa, Portugal</li>
               </ul>
             </CardContent>
           </Card>
@@ -234,3 +234,4 @@ const PrivacyPolicy = () => {
 };
 
 export default PrivacyPolicy;
+

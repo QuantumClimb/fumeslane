@@ -238,7 +238,7 @@ export default function OrderManagement({ onClose }: OrderManagementProps) {
                               </span>
                             )}
                           </div>
-                          <span className="font-medium">€{(item.totalPrice || item.price * item.quantity || 0).toFixed(2)}</span>
+                          <span className="font-medium">₹{((item.totalPrice || item.price * item.quantity || 0) / 100).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
@@ -246,15 +246,15 @@ export default function OrderManagement({ onClose }: OrderManagementProps) {
                     <div className="pt-2 space-y-1 border-t">
                       <div className="flex justify-between text-sm">
                         <span>Subtotal:</span>
-                        <span>€{(order.subtotal || 0).toFixed(2)}</span>
+                        <span>₹{((order.subtotal || 0) / 100).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Delivery:</span>
-                        <span>€{(order.deliveryFee || 0).toFixed(2)}</span>
+                        <span>₹{((order.deliveryFee || 0) / 100).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between font-bold text-lg pt-1">
                         <span>Total:</span>
-                        <span className="text-primary">€{(order.total || 0).toFixed(2)}</span>
+                        <span className="text-primary">₹{((order.total || 0) / 100).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>

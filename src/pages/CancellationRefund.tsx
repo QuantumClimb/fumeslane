@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const CancellationRefund = () => {
   return (
@@ -12,7 +12,7 @@ const CancellationRefund = () => {
                 <strong>Last Updated:</strong> November 3, 2025
               </p>
               <p className="text-foreground/80 leading-relaxed">
-                At Namaste Curry House, we want you to be completely satisfied with your order. 
+                At FumesLane, we want you to be completely satisfied with your order. 
                 This policy outlines our procedures for order cancellations and refunds.
               </p>
             </CardContent>
@@ -259,7 +259,7 @@ const CancellationRefund = () => {
               <ul className="list-none space-y-2 mt-4">
                 <li><strong>Phone:</strong> +351 920 617 185 (Mon-Sat: 11 AM - 10 PM, Closed Sundays)</li>
                 <li><strong>Email:</strong> namastecurrylisboa@gmail.com</li>
-                <li><strong>Address:</strong> R. Agostinho Lourenço 339, 1000-011 Lisboa, Portugal</li>
+                <li><strong>Address:</strong> R. Agostinho LourenÃ§o 339, 1000-011 Lisboa, Portugal</li>
               </ul>
             </CardContent>
           </Card>
@@ -282,3 +282,4 @@ const CancellationRefund = () => {
 };
 
 export default CancellationRefund;
+

@@ -1,0 +1,83 @@
+âš ï¸  Resend disabled - email notifications will not work
+âš ï¸  Stripe disabled - payment endpoints will not work
+Error fetching categories: PrismaClientValidationError: 
+Invalid `prisma.productCategory.findMany()` invocation:
+
+{
+  orderBy: {
+    name: "asc"
+  },
+  include: {
+    _count: {
+      select: {
+        items: true,
+        ~~~~~
+?       products?: true
+      }
+    }
+  }
+}
+
+Unknown field `items` for select statement on model `ProductCategoryCountOutputType`. Available options are marked with ?.
+    at Nn (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at ei.handleRequestError (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:121:6911)
+    at ei.handleAndLogRequestError (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:121:6593)
+    at ei.request (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:121:6300)
+    at async a (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:130:9551)
+    at async file:///K:/H%20DRIVE/Quantum%20Climb/APPS/fumeslane/server/index.js:423:24 {
+  clientVersion: '6.17.1'
+}
+Error fetching categories: PrismaClientValidationError: 
+Invalid `prisma.productCategory.findMany()` invocation:
+
+{
+  orderBy: {
+    name: "asc"
+  },
+  include: {
+    _count: {
+      select: {
+        items: true,
+        ~~~~~
+?       products?: true
+      }
+    }
+  }
+}
+
+Unknown field `items` for select statement on model `ProductCategoryCountOutputType`. Available options are marked with ?.
+    at Nn (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at ei.handleRequestError (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:121:6911)
+    at ei.handleAndLogRequestError (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:121:6593)
+    at ei.request (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:121:6300)
+    at async a (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:130:9551)
+    at async file:///K:/H%20DRIVE/Quantum%20Climb/APPS/fumeslane/server/index.js:423:24 {
+  clientVersion: '6.17.1'
+}
+Error fetching categories: PrismaClientValidationError: 
+Invalid `prisma.productCategory.findMany()` invocation:
+
+{
+  orderBy: {
+    name: "asc"
+  },
+  include: {
+    _count: {
+      select: {
+        items: true,
+        ~~~~~
+?       products?: true
+      }
+    }
+  }
+}
+
+Unknown field `items` for select statement on model `ProductCategoryCountOutputType`. Available options are marked with ?.
+    at Nn (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at ei.handleRequestError (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:121:6911)
+    at ei.handleAndLogRequestError (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:121:6593)
+    at ei.request (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:121:6300)
+    at async a (K:\H DRIVE\Quantum Climb\APPS\fumeslane\node_modules\@prisma\client\runtime\library.js:130:9551)
+    at async file:///K:/H%20DRIVE/Quantum%20Climb/APPS/fumeslane/server/index.js:423:24 {
+  clientVersion: '6.17.1'
+}

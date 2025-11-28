@@ -1,12 +1,12 @@
-// server/index.js - Express API server for menu data
+﻿// server/index.js - Express API server for menu data
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'node:path';
 import fs from 'node:fs';
 import { PrismaClient } from '@prisma/client';
-import Stripe from 'stripe';
-import { Resend } from 'resend';
+// import Stripe from 'stripe';
+// import { Resend } from 'resend';
 import twilio from 'twilio';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'node:url';
@@ -30,22 +30,22 @@ const RESTAURANT_EMAIL = process.env.RESTAURANT_EMAIL || 'namastecurrylisboa@gma
 const RESEND_TEST_MODE = process.env.RESEND_TEST_MODE === 'true' || true; // Default to test mode
 const RESEND_TEST_EMAIL = 'juncando@gmail.com'; // Resend account owner email
 
-// Initialize Resend (for email notifications)
+// Initialize Resend (for email notifications) - DISABLED
 let resend = null;
-if (process.env.RESEND_API_KEY) {
-  try {
-    resend = new Resend(process.env.RESEND_API_KEY);
-    console.log('✅ Resend initialized for email notifications');
-    if (RESEND_TEST_MODE) {
-      console.log('⚠️  RESEND TEST MODE: All emails will be sent to', RESEND_TEST_EMAIL);
-      console.log('   Set RESEND_TEST_MODE=false after verifying domain');
-    }
-  } catch (error) {
-    console.warn('⚠️  Resend initialization failed:', error.message);
-  }
-} else {
-  console.warn('⚠️  Resend not configured - email notifications will not work');
-}
+// if (process.env.RESEND_API_KEY) {
+//   try {
+//     resend = new Resend(process.env.RESEND_API_KEY);
+//     console.log('âœ… Resend initialized for email notifications');
+//     if (RESEND_TEST_MODE) {
+//       console.log('âš ï¸  RESEND TEST MODE: All emails will be sent to', RESEND_TEST_EMAIL);
+//       console.log('   Set RESEND_TEST_MODE=false after verifying domain');
+//     }
+//   } catch (error) {
+//     console.warn('âš ï¸  Resend initialization failed:', error.message);
+//   }
+// } else {
+  console.warn('âš ï¸  Resend disabled - email notifications will not work');
+// }
 
 // Initialize Twilio (for WhatsApp notifications)
 let twilioClient = null;
@@ -55,32 +55,32 @@ const TWILIO_WHATSAPP_FROM = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+1415
 if (TWILIO_ENABLED && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
   try {
     twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-    console.log('✅ Twilio initialized for WhatsApp notifications');
+    console.log('âœ… Twilio initialized for WhatsApp notifications');
     console.log(`   From: ${TWILIO_WHATSAPP_FROM}`);
     console.log(`   To: ${RESTAURANT_WHATSAPP}`);
   } catch (error) {
-    console.warn('⚠️  Twilio initialization failed:', error.message);
+    console.warn('âš ï¸  Twilio initialization failed:', error.message);
   }
 } else if (TWILIO_ENABLED) {
-  console.warn('⚠️  Twilio not configured - WhatsApp notifications will use manual method');
+  console.warn('âš ï¸  Twilio not configured - WhatsApp notifications will use manual method');
 } else {
-  console.log('ℹ️  Twilio disabled - using manual WhatsApp links (set TWILIO_ENABLED=true to enable)');
+  console.log('â„¹ï¸  Twilio disabled - using manual WhatsApp links (set TWILIO_ENABLED=true to enable)');
 }
 
-// Initialize Stripe (only if key is configured)
+// Initialize Stripe (only if key is configured) - DISABLED
 let stripe = null;
-if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_YOUR_SECRET_KEY_HERE') {
-  try {
-    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-11-20.acacia',
-    });
-    console.log('✅ Stripe initialized');
-  } catch (error) {
-    console.warn('⚠️  Stripe initialization failed:', error.message);
-  }
-} else {
-  console.warn('⚠️  Stripe not configured - payment endpoints will not work');
-}
+// if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_YOUR_SECRET_KEY_HERE') {
+//   try {
+//     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+//       apiVersion: '2024-11-20.acacia',
+//     });
+//     console.log('âœ… Stripe initialized');
+//   } catch (error) {
+//     console.warn('âš ï¸  Stripe initialization failed:', error.message);
+//   }
+// } else {
+  console.warn('âš ï¸  Stripe disabled - payment endpoints will not work');
+// }
 
 const PORT = process.env.PORT || 3001;
 
@@ -102,15 +102,31 @@ async function ensureDbConnection(force = false) {
     return true;
   } catch (error) {
     dbConnected = false;
-    console.warn('⚠️  Database check failed:', error.message);
+    console.warn('âš ï¸  Database check failed:', error.message);
     return false;
   } finally {
     lastDbCheck = now;
   }
 }
 
-// Configure multer for in-memory image storage (will save to database)
-const storage = multer.memoryStorage();
+// Configure multer for file system storage (saves to public/images/fragrances/)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadsDir = path.join(process.cwd(), 'public', 'images', 'fragrances');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename: timestamp-originalname
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    const nameWithoutExt = path.basename(file.originalname, ext);
+    cb(null, `${nameWithoutExt}-${uniqueSuffix}${ext}`);
+  }
+});
 
 const upload = multer({ 
   storage: storage,
@@ -142,7 +158,7 @@ app.get('/api/images/:id', async (req, res) => {
     }
 
     const { id } = req.params;
-    const item = await prisma.menuItem.findUnique({
+    const item = await prisma.product.findUnique({
       where: { id: Number.parseInt(id) },
       select: { imageData: true, imageMimeType: true }
     });
@@ -231,8 +247,11 @@ app.get('/api/db/diagnostics', async (req, res) => {
 
 // Get all menu categories with items
 app.get('/api/menu', async (req, res) => {
+  console.log('ðŸ“¥ GET /api/menu request received');
   try {
+    console.log('ðŸ” Checking database connection...');
     if (!(await ensureDbConnection())) {
+      console.log('âš ï¸  Database not connected, using fallback');
       // Fallback: serve static menu data bundled with the app
       try {
         const fallbackPath = path.join(__dirname, '..', 'public', 'menuData.json');
@@ -246,9 +265,10 @@ app.get('/api/menu', async (req, res) => {
       return res.json([]);
     }
 
-    const categories = await prisma.menuCategory.findMany({
+    console.log('ðŸ” Querying ProductCategory...');
+    const categories = await prisma.productCategory.findMany({
       include: {
-        items: true
+        products: true
       },
       orderBy: {
         name: 'asc'
@@ -258,23 +278,35 @@ app.get('/api/menu', async (req, res) => {
     // Transform to match frontend expectations with database-served images
     const menuData = categories.map(category => ({
       name: category.name,
-      items: category.items.map(item => ({
+      items: category.products.map(item => ({
         id: item.id.toString(),
         name: item.name,
         namePt: item.namePt,
         description: item.description,
         descriptionPt: item.descriptionPt,
         price: item.price,
-        dietary: item.dietary ? item.dietary.split(',').filter(d => d.trim()) : [],
-        hasSpiceCustomization: item.hasSpiceCustomization || false,
-        // Use database-served image endpoint or external URL fallback
-        imageUrl: item.imageData ? `/api/images/${item.id}` : item.imageUrl
+        brand: item.brand,
+        volume: item.volume,
+        concentration: item.concentration,
+        gender: item.gender,
+        fragranceFamily: item.fragranceFamily,
+        topNotes: item.topNotes,
+        middleNotes: item.middleNotes,
+        baseNotes: item.baseNotes,
+        stockQuantity: item.stockQuantity,
+        inStock: item.inStock,
+        dietary: [], // No dietary for perfumes
+        hasSpiceCustomization: false, // No spice customization for perfumes
+        // Use imageUrl from database (static file path)
+        imageUrl: item.imageUrl
       }))
     }));
 
     res.json(menuData);
   } catch (error) {
-    console.error('Error fetching menu:', error);
+    console.error('âŒ Error fetching menu:', error);
+    console.error('âŒ Error message:', error.message);
+    console.error('âŒ Error stack:', error.stack);
     res.status(500).json({ error: 'Failed to fetch menu data' });
   }
 });
@@ -289,7 +321,7 @@ app.get('/api/menu/category/:categoryName', async (req, res) => {
       });
     }
     const { categoryName } = req.params;
-    const category = await prisma.menuCategory.findFirst({
+    const category = await prisma.productCategory.findFirst({
       where: {
         name: {
           equals: categoryName,
@@ -314,8 +346,8 @@ app.get('/api/menu/category/:categoryName', async (req, res) => {
       price: item.price,
       dietary: item.dietary ? item.dietary.split(',').filter(d => d.trim()) : [],
       hasSpiceCustomization: item.hasSpiceCustomization || false,
-      // Use database-served image endpoint or external URL fallback
-      imageUrl: item.imageData ? `/api/images/${item.id}` : item.imageUrl
+      // Use imageUrl from database (static file path)
+      imageUrl: item.imageUrl
     }));
 
     res.json({
@@ -342,7 +374,7 @@ app.get('/api/menu/search', async (req, res) => {
       return res.status(400).json({ error: 'Search query required' });
     }
 
-    const items = await prisma.menuItem.findMany({
+    const items = await prisma.product.findMany({
       where: {
         OR: [
           {
@@ -404,7 +436,7 @@ app.get('/api/admin/categories', async (req, res) => {
     if (!(await ensureDbConnection())) {
       return res.status(503).json({ error: 'Database unavailable' });
     }
-    const categories = await prisma.menuCategory.findMany({
+    const categories = await prisma.productCategory.findMany({
       orderBy: {
         name: 'asc'
       },
@@ -434,7 +466,7 @@ app.post('/api/admin/categories', async (req, res) => {
     }
 
     // Check if category already exists
-    const existingCategory = await prisma.menuCategory.findFirst({
+    const existingCategory = await prisma.productCategory.findFirst({
       where: {
         name: {
           equals: name.trim(),
@@ -447,7 +479,7 @@ app.post('/api/admin/categories', async (req, res) => {
       return res.status(409).json({ error: 'Category already exists' });
     }
 
-    const newCategory = await prisma.menuCategory.create({
+    const newCategory = await prisma.productCategory.create({
       data: {
         name: name.trim()
       },
@@ -479,7 +511,7 @@ app.put('/api/admin/categories/:id', async (req, res) => {
     }
 
     // Check if another category with this name exists
-    const existingCategory = await prisma.menuCategory.findFirst({
+    const existingCategory = await prisma.productCategory.findFirst({
       where: {
         name: {
           equals: name.trim(),
@@ -495,7 +527,7 @@ app.put('/api/admin/categories/:id', async (req, res) => {
       return res.status(409).json({ error: 'Category name already exists' });
     }
 
-    const updatedCategory = await prisma.menuCategory.update({
+    const updatedCategory = await prisma.productCategory.update({
       where: { id: Number.parseInt(id) },
       data: { name: name.trim() },
       include: {
@@ -524,7 +556,7 @@ app.delete('/api/admin/categories/:id', async (req, res) => {
     const { id } = req.params;
 
     // Check if category has any menu items
-    const category = await prisma.menuCategory.findUnique({
+    const category = await prisma.productCategory.findUnique({
       where: { id: Number.parseInt(id) },
       include: {
         _count: {
@@ -543,7 +575,7 @@ app.delete('/api/admin/categories/:id', async (req, res) => {
       });
     }
 
-    await prisma.menuCategory.delete({
+    await prisma.productCategory.delete({
       where: { id: Number.parseInt(id) }
     });
 
@@ -563,9 +595,9 @@ app.post('/api/admin/menu-items', async (req, res) => {
     if (!(await ensureDbConnection())) {
       return res.status(503).json({ error: 'Database unavailable' });
     }
-    const { name, namePt, description, descriptionPt, price, dietary, hasSpiceCustomization, categoryId, imageUrl, imageData, imageMimeType, imageSize } = req.body;
+    const { name, namePt, description, descriptionPt, price, dietary, hasSpiceCustomization, categoryId, imageUrl } = req.body;
     
-    const newItem = await prisma.menuItem.create({
+    const newItem = await prisma.product.create({
       data: {
         name,
         namePt: namePt || null,
@@ -576,9 +608,9 @@ app.post('/api/admin/menu-items', async (req, res) => {
         hasSpiceCustomization: hasSpiceCustomization || false,
         categoryId: Number.parseInt(categoryId),
         imageUrl: imageUrl || null,
-        imageData: imageData || null,
-        imageMimeType: imageMimeType || null,
-        imageSize: imageSize ? Number.parseInt(imageSize) : null
+        imageData: null,
+        imageMimeType: null,
+        imageSize: null
       },
       include: {
         category: true
@@ -596,7 +628,7 @@ app.post('/api/admin/menu-items', async (req, res) => {
       hasSpiceCustomization: newItem.hasSpiceCustomization,
       categoryId: newItem.categoryId,
       category: newItem.category.name,
-      imageUrl: newItem.imageData ? `/api/images/${newItem.id}` : newItem.imageUrl
+      imageUrl: newItem.imageUrl
     });
   } catch (error) {
     console.error('Error creating menu item:', error);
@@ -611,9 +643,9 @@ app.put('/api/admin/menu-items/:id', async (req, res) => {
       return res.status(503).json({ error: 'Database unavailable' });
     }
     const { id } = req.params;
-    const { name, namePt, description, descriptionPt, price, dietary, hasSpiceCustomization, categoryId, imageUrl, imageData, imageMimeType, imageSize } = req.body;
+    const { name, namePt, description, descriptionPt, price, dietary, hasSpiceCustomization, categoryId, imageUrl } = req.body;
     
-    const updatedItem = await prisma.menuItem.update({
+    const updatedItem = await prisma.product.update({
       where: { id: Number.parseInt(id) },
       data: {
         name,
@@ -625,9 +657,9 @@ app.put('/api/admin/menu-items/:id', async (req, res) => {
         hasSpiceCustomization: hasSpiceCustomization || false,
         categoryId: Number.parseInt(categoryId),
         imageUrl: imageUrl || null,
-        imageData: imageData || null,
-        imageMimeType: imageMimeType || null,
-        imageSize: imageSize ? Number.parseInt(imageSize) : null
+        imageData: null,
+        imageMimeType: null,
+        imageSize: null
       },
       include: {
         category: true
@@ -645,7 +677,7 @@ app.put('/api/admin/menu-items/:id', async (req, res) => {
       hasSpiceCustomization: updatedItem.hasSpiceCustomization,
       categoryId: updatedItem.categoryId,
       category: updatedItem.category.name,
-      imageUrl: updatedItem.imageData ? `/api/images/${updatedItem.id}` : updatedItem.imageUrl
+      imageUrl: updatedItem.imageUrl
     });
   } catch (error) {
     console.error('Error updating menu item:', error);
@@ -662,7 +694,7 @@ app.delete('/api/admin/menu-items/:id', async (req, res) => {
     const { id } = req.params;
     
     // Get the item to check for legacy file-based image
-    const item = await prisma.menuItem.findUnique({
+    const item = await prisma.product.findUnique({
       where: { id: Number.parseInt(id) }
     });
     
@@ -671,7 +703,7 @@ app.delete('/api/admin/menu-items/:id', async (req, res) => {
     }
     
     // Delete the item (database-stored images are automatically removed)
-    await prisma.menuItem.delete({
+    await prisma.product.delete({
       where: { id: Number.parseInt(id) }
     });
     
@@ -682,7 +714,7 @@ app.delete('/api/admin/menu-items/:id', async (req, res) => {
   }
 });
 
-// Image upload endpoint - stores directly in database
+// Image upload endpoint - stores as file in public/images/fragrances/
 app.post('/api/admin/upload-image', (req, res) => {
   upload.single('image')(req, res, async (err) => {
     // Handle multer errors specifically
@@ -707,30 +739,14 @@ app.post('/api/admin/upload-image', (req, res) => {
         return res.status(400).json({ error: 'No image file provided' });
       }
 
-      if (!(await ensureDbConnection())) {
-        return res.status(503).json({ error: 'Database unavailable' });
-      }
+      // Generate the public URL path
+      const imageUrl = `/images/fragrances/${req.file.filename}`;
 
-      // Additional server-side validation
-      const maxSize = 250 * 1024; // 250KB
-      if (req.file.size > maxSize) {
-        return res.status(400).json({ 
-          error: `Image too large. Maximum size is 250KB. Your image is ${Math.round(req.file.size / 1024)}KB.` 
-        });
-      }
-
-      // Convert buffer to base64 for database storage
-      const imageData = req.file.buffer.toString('base64');
-      const imageMimeType = req.file.mimetype;
-      const imageSize = req.file.size;
-
-      // For now, just return the image data info
-      // The actual saving will happen when creating/updating menu items
       res.json({ 
-        imageData,
-        imageMimeType,
-        imageSize,
-        message: 'Image processed successfully - ready for menu item association'
+        imageUrl,
+        imageMimeType: req.file.mimetype,
+        imageSize: req.file.size,
+        message: 'Image uploaded successfully'
       });
     } catch (error) {
       console.error('Error processing image:', error);
@@ -755,7 +771,7 @@ app.get('/api/admin/menu-items', async (req, res) => {
     } : {};
     
     const [items, total] = await Promise.all([
-      prisma.menuItem.findMany({
+      prisma.product.findMany({
         where,
         include: {
           category: true
@@ -766,7 +782,7 @@ app.get('/api/admin/menu-items', async (req, res) => {
         skip: offset,
         take: Number.parseInt(limit)
       }),
-      prisma.menuItem.count({ where })
+      prisma.product.count({ where })
     ]);
     
     const menuItems = items.map(item => ({
@@ -780,8 +796,8 @@ app.get('/api/admin/menu-items', async (req, res) => {
       hasSpiceCustomization: item.hasSpiceCustomization || false,
       categoryId: item.categoryId,
       category: item.category.name,
-      // Use database-served image endpoint or external URL fallback
-      imageUrl: item.imageData ? `/api/images/${item.id}` : item.imageUrl
+      // Use imageUrl from database (static file path)
+      imageUrl: item.imageUrl
     }));
     
     res.json({
@@ -811,38 +827,38 @@ function generateOrderNumber() {
 // Helper: Calculate delivery fee
 function calculateDeliveryFee(address) {
   // Simple flat rate for now - can be enhanced with distance calculation
-  return 2.5; // €2.50 delivery fee
+  return 2.5; // â‚¬2.50 delivery fee
 }
 
 // Helper: Format order for WhatsApp message
 function formatOrderForWhatsApp(order) {
   const items = order.orderItems.map(item => {
     const spiceText = item.spiceLevel === undefined ? '' : ` - ${item.spiceLevel}% spice`;
-    return `• ${item.quantity}x ${item.name} (€${item.totalPrice.toFixed(2)})${spiceText}`;
+    return `â€¢ ${item.quantity}x ${item.name} (â‚¬${item.totalPrice.toFixed(2)})${spiceText}`;
   }).join('\n');
   
   const address = typeof order.deliveryAddress === 'string' 
     ? order.deliveryAddress 
     : `${order.deliveryAddress.street}, ${order.deliveryAddress.city}, ${order.deliveryAddress.postalCode}`;
   
-  return `🔔 *NEW ORDER - ${order.orderNumber}*
+  return `ðŸ”” *NEW ORDER - ${order.orderNumber}*
 
-👤 *Customer:* ${order.customerName}
-📞 *Phone:* ${order.customerPhone}
-📧 *Email:* ${order.customerEmail}
+ðŸ‘¤ *Customer:* ${order.customerName}
+ðŸ“ž *Phone:* ${order.customerPhone}
+ðŸ“§ *Email:* ${order.customerEmail}
 
-📦 *Items:*
+ðŸ“¦ *Items:*
 ${items}
 
-💰 *Subtotal:* €${order.subtotal.toFixed(2)}
-🚚 *Delivery:* €${order.deliveryFee.toFixed(2)}
-💳 *Total:* €${order.total.toFixed(2)}
+ðŸ’° *Subtotal:* â‚¬${order.subtotal.toFixed(2)}
+ðŸšš *Delivery:* â‚¬${order.deliveryFee.toFixed(2)}
+ðŸ’³ *Total:* â‚¬${order.total.toFixed(2)}
 
-📍 *Delivery Address:*
+ðŸ“ *Delivery Address:*
 ${address}
 
-💳 *Payment:* ${order.paymentMethod === 'STRIPE_CARD' ? 'Card (PAID ✅)' : 'Cash on Delivery'}
-📊 *Status:* ${order.status}`;
+ðŸ’³ *Payment:* ${order.paymentMethod === 'STRIPE_CARD' ? 'Card (PAID âœ…)' : 'Cash on Delivery'}
+ðŸ“Š *Status:* ${order.status}`;
 }
 
 // Helper: Send WhatsApp notification (Twilio or manual link)
@@ -852,9 +868,9 @@ async function sendWhatsAppNotification(order) {
   if (twilioClient && TWILIO_ENABLED) {
     // Automatic sending via Twilio
     try {
-      console.log('\n📱 ═══════════════════════════════════════════');
+      console.log('\nðŸ“± â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
       console.log('   SENDING WHATSAPP VIA TWILIO');
-      console.log('   ═══════════════════════════════════════════');
+      console.log('   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
       
       const result = await twilioClient.messages.create({
         from: TWILIO_WHATSAPP_FROM,
@@ -862,15 +878,15 @@ async function sendWhatsAppNotification(order) {
         body: message
       });
       
-      console.log(`✅ WhatsApp sent successfully!`);
+      console.log(`âœ… WhatsApp sent successfully!`);
       console.log(`   Message SID: ${result.sid}`);
       console.log(`   Status: ${result.status}`);
-      console.log('   ═══════════════════════════════════════════\n');
+      console.log('   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
       
       return { success: true, method: 'twilio', sid: result.sid };
       
     } catch (error) {
-      console.error('❌ Twilio WhatsApp failed:', error.message);
+      console.error('âŒ Twilio WhatsApp failed:', error.message);
       console.log('   Falling back to manual method...\n');
       // Fall through to manual method
     }
@@ -880,13 +896,13 @@ async function sendWhatsAppNotification(order) {
   const encodedMessage = encodeURIComponent(message);
   const whatsappLink = `https://wa.me/${RESTAURANT_WHATSAPP.replaceAll('+', '')}?text=${encodedMessage}`;
   
-  console.log('\n📱 ═══════════════════════════════════════════');
+  console.log('\nðŸ“± â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
   console.log('   WHATSAPP NOTIFICATION (MANUAL)');
-  console.log('   ═══════════════════════════════════════════');
+  console.log('   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
   console.log(message);
-  console.log('   ═══════════════════════════════════════════');
-  console.log(`   🔗 Send manually: ${whatsappLink}`);
-  console.log('   ═══════════════════════════════════════════\n');
+  console.log('   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
+  console.log(`   ðŸ”— Send manually: ${whatsappLink}`);
+  console.log('   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
   
   return { success: true, method: 'manual', link: whatsappLink };
 }
@@ -898,10 +914,10 @@ function logWhatsAppNotification(order) {
 
 // Helper: Send email notification to customer
 async function sendCustomerConfirmationEmail(order) {
-  console.log(`📧 sendCustomerConfirmationEmail called for order ${order.orderNumber}`);
+  console.log(`ðŸ“§ sendCustomerConfirmationEmail called for order ${order.orderNumber}`);
   
   if (!resend) {
-    console.warn('⚠️  Resend not configured - skipping customer email');
+    console.warn('âš ï¸  Resend not configured - skipping customer email');
     console.warn('   RESEND_API_KEY:', process.env.RESEND_API_KEY ? 'SET' : 'NOT SET');
     return null;
   }
@@ -916,7 +932,7 @@ async function sendCustomerConfirmationEmail(order) {
           ${item.spiceLevel ? `<br><small style="color: #6b7280;">Spice Level: ${item.spiceLevel}</small>` : ''}
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">€${(item.price * item.quantity).toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">â‚¬${(item.price * item.quantity).toFixed(2)}</td>
       </tr>
     `).join('');
 
@@ -943,11 +959,11 @@ async function sendCustomerConfirmationEmail(order) {
         <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
           ${RESEND_TEST_MODE ? `
           <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 0 0 20px 0;">
-            <p style="margin: 0; font-weight: bold; color: #92400e;">⚠️ TEST MODE</p>
+            <p style="margin: 0; font-weight: bold; color: #92400e;">âš ï¸ TEST MODE</p>
             <p style="margin: 5px 0 0; color: #92400e; font-size: 13px;">This email was sent to ${RESEND_TEST_EMAIL} for testing. Original recipient: ${order.customerEmail}</p>
           </div>
           ` : ''}
-          <p style="font-size: 18px; color: #059669; font-weight: bold; margin-top: 0;">✓ Order Confirmed!</p>
+          <p style="font-size: 18px; color: #059669; font-weight: bold; margin-top: 0;">âœ“ Order Confirmed!</p>
           
           <p>Dear ${order.customerName},</p>
           
@@ -974,15 +990,15 @@ async function sendCustomerConfirmationEmail(order) {
             <tfoot>
               <tr>
                 <td colspan="2" style="padding: 12px; text-align: right; font-weight: bold; border-top: 2px solid #D4AF37;">Subtotal:</td>
-                <td style="padding: 12px; text-align: right; border-top: 2px solid #D4AF37;">€${order.subtotal.toFixed(2)}</td>
+                <td style="padding: 12px; text-align: right; border-top: 2px solid #D4AF37;">â‚¬${order.subtotal.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="2" style="padding: 12px; text-align: right; font-weight: bold;">Delivery Fee:</td>
-                <td style="padding: 12px; text-align: right;">€${order.deliveryFee.toFixed(2)}</td>
+                <td style="padding: 12px; text-align: right;">â‚¬${order.deliveryFee.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="2" style="padding: 12px; text-align: right; font-weight: bold; font-size: 18px; color: #D4AF37;">Total:</td>
-                <td style="padding: 12px; text-align: right; font-size: 18px; font-weight: bold; color: #D4AF37;">€${order.total.toFixed(2)}</td>
+                <td style="padding: 12px; text-align: right; font-size: 18px; font-weight: bold; color: #D4AF37;">â‚¬${order.total.toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
@@ -1011,7 +1027,7 @@ async function sendCustomerConfirmationEmail(order) {
             <p><strong>Namaste Curry House</strong></p>
             <p>Authentic Indian Cuisine in Portugal</p>
             <p>Phone: ${RESTAURANT_WHATSAPP} | Email: ${RESTAURANT_EMAIL}</p>
-            <p style="margin-top: 20px;">Thank you for choosing us! 🙏</p>
+            <p style="margin-top: 20px;">Thank you for choosing us! ðŸ™</p>
           </div>
         </div>
       </body>
@@ -1026,7 +1042,7 @@ async function sendCustomerConfirmationEmail(order) {
     });
 
     const emailTo = RESEND_TEST_MODE ? RESEND_TEST_EMAIL : order.customerEmail;
-    console.log(`✅ Customer confirmation email sent successfully!`);
+    console.log(`âœ… Customer confirmation email sent successfully!`);
     console.log(`   To: ${emailTo}${RESEND_TEST_MODE ? ' (TEST MODE)' : ''}`);
     console.log(`   Message ID:`, result.data?.id || result.id);
     if (RESEND_TEST_MODE && order.customerEmail !== RESEND_TEST_EMAIL) {
@@ -1034,7 +1050,7 @@ async function sendCustomerConfirmationEmail(order) {
     }
     return result;
   } catch (error) {
-    console.error('❌ Error sending customer email:');
+    console.error('âŒ Error sending customer email:');
     console.error('   Error message:', error.message);
     console.error('   Error details:', error);
     return null;
@@ -1044,14 +1060,14 @@ async function sendCustomerConfirmationEmail(order) {
 // Helper: Send email notification to restaurant owner
 async function sendOwnerNotificationEmail(order) {
   if (!resend) {
-    console.warn('⚠️  Resend not configured - skipping owner email');
+    console.warn('âš ï¸  Resend not configured - skipping owner email');
     return null;
   }
 
   try {
     const orderItemsText = order.orderItems.map(item => {
       const spiceText = item.spiceLevel ? ` (${item.spiceLevel})` : '';
-      return `${item.quantity}x ${item.name}${spiceText} - €${(item.price * item.quantity).toFixed(2)}`;
+      return `${item.quantity}x ${item.name}${spiceText} - â‚¬${(item.price * item.quantity).toFixed(2)}`;
     }).join('\n');
 
     const deliveryAddress = order.deliveryAddress;
@@ -1067,14 +1083,14 @@ async function sendOwnerNotificationEmail(order) {
       </head>
       <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
         <div style="background-color: #dc2626; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-          <h1 style="margin: 0; font-size: 28px;">🔔 NEW ORDER RECEIVED</h1>
+          <h1 style="margin: 0; font-size: 28px;">ðŸ”” NEW ORDER RECEIVED</h1>
           <p style="margin: 10px 0 0; font-size: 18px; font-weight: bold;">${order.orderNumber}</p>
         </div>
         
         <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
           ${RESEND_TEST_MODE ? `
           <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 0 0 20px 0;">
-            <p style="margin: 0; font-weight: bold; color: #92400e;">⚠️ TEST MODE</p>
+            <p style="margin: 0; font-weight: bold; color: #92400e;">âš ï¸ TEST MODE</p>
             <p style="margin: 5px 0 0; color: #92400e; font-size: 13px;">This email was sent to ${RESEND_TEST_EMAIL} for testing. Original recipient: ${RESTAURANT_EMAIL}</p>
           </div>
           ` : ''}
@@ -1105,15 +1121,15 @@ async function sendOwnerNotificationEmail(order) {
           <table style="width: 100%; margin: 15px 0; font-size: 16px;">
             <tr>
               <td style="padding: 8px 0; text-align: right; font-weight: bold;">Subtotal:</td>
-              <td style="padding: 8px 0 8px 20px; text-align: right; width: 100px;">€${order.subtotal.toFixed(2)}</td>
+              <td style="padding: 8px 0 8px 20px; text-align: right; width: 100px;">â‚¬${order.subtotal.toFixed(2)}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; text-align: right; font-weight: bold;">Delivery Fee:</td>
-              <td style="padding: 8px 0 8px 20px; text-align: right;">€${order.deliveryFee.toFixed(2)}</td>
+              <td style="padding: 8px 0 8px 20px; text-align: right;">â‚¬${order.deliveryFee.toFixed(2)}</td>
             </tr>
             <tr style="border-top: 2px solid #dc2626;">
               <td style="padding: 12px 0; text-align: right; font-weight: bold; font-size: 18px; color: #dc2626;">TOTAL:</td>
-              <td style="padding: 12px 0 12px 20px; text-align: right; font-size: 18px; font-weight: bold; color: #dc2626;">€${order.total.toFixed(2)}</td>
+              <td style="padding: 12px 0 12px 20px; text-align: right; font-size: 18px; font-weight: bold; color: #dc2626;">â‚¬${order.total.toFixed(2)}</td>
             </tr>
           </table>
 
@@ -1129,7 +1145,7 @@ async function sendOwnerNotificationEmail(order) {
 
           <div style="background-color: #dcfce7; border-left: 4px solid #16a34a; padding: 15px; margin: 20px 0;">
             <p style="margin: 0; font-weight: bold; color: #166534;">Payment Status:</p>
-            <p style="margin: 5px 0 0; color: #166534; font-size: 18px; font-weight: bold;">✓ PAID (${order.paymentMethod})</p>
+            <p style="margin: 5px 0 0; color: #166534; font-size: 18px; font-weight: bold;">âœ“ PAID (${order.paymentMethod})</p>
           </div>
 
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
@@ -1145,18 +1161,18 @@ async function sendOwnerNotificationEmail(order) {
     const result = await resend.emails.send({
       from: 'Namaste Orders <onboarding@resend.dev>',
       to: RESEND_TEST_MODE ? RESEND_TEST_EMAIL : RESTAURANT_EMAIL,
-      subject: `🔔 NEW ORDER: ${order.orderNumber} - €${order.total.toFixed(2)}`,
+      subject: `ðŸ”” NEW ORDER: ${order.orderNumber} - â‚¬${order.total.toFixed(2)}`,
       html: htmlContent,
     });
 
     const emailTo = RESEND_TEST_MODE ? RESEND_TEST_EMAIL : RESTAURANT_EMAIL;
-    console.log(`✅ Owner notification email sent to ${emailTo}${RESEND_TEST_MODE ? ' (TEST MODE)' : ''}`);
+    console.log(`âœ… Owner notification email sent to ${emailTo}${RESEND_TEST_MODE ? ' (TEST MODE)' : ''}`);
     if (RESEND_TEST_MODE && RESTAURANT_EMAIL !== RESEND_TEST_EMAIL) {
       console.log(`   (Original recipient: ${RESTAURANT_EMAIL})`);
     }
     return result;
   } catch (error) {
-    console.error('❌ Error sending owner email:', error);
+    console.error('âŒ Error sending owner email:', error);
     return null;
   }
 }
@@ -1194,7 +1210,7 @@ app.get('/api/stripe/health', (req, res) => {
 app.post('/api/stripe/create-checkout-session', express.json(), async (req, res) => {
   try {
     if (!stripe) {
-      console.error('❌ Stripe not initialized - check STRIPE_SECRET_KEY environment variable');
+      console.error('âŒ Stripe not initialized - check STRIPE_SECRET_KEY environment variable');
       return res.status(503).json({ 
         error: 'Stripe not configured',
         details: 'Payment service is not available. Please contact support.'
@@ -1208,7 +1224,7 @@ app.post('/api/stripe/create-checkout-session', express.json(), async (req, res)
     const { orderItems, customerInfo, deliveryAddress } = req.body;
     
     // Debug logging
-    console.log('🔍 Checkout session request received');
+    console.log('ðŸ” Checkout session request received');
     console.log('Order items count:', orderItems?.length);
     console.log('Order items:', JSON.stringify(orderItems, null, 2));
     
@@ -1250,7 +1266,7 @@ app.post('/api/stripe/create-checkout-session', express.json(), async (req, res)
     });
     
     // Create line items for Stripe Checkout
-    console.log('🔍 Creating line items for Stripe...');
+    console.log('ðŸ” Creating line items for Stripe...');
     const lineItems = orderItems.map((item, index) => {
       console.log(`Item ${index}:`, {
         name: item.name,
@@ -1283,7 +1299,7 @@ app.post('/api/stripe/create-checkout-session', express.json(), async (req, res)
       const unitPrice = item.totalPrice ? item.totalPrice / item.quantity : item.price;
       const unitAmount = Math.round(unitPrice * 100);
       
-      console.log(`  → Unit amount: ${unitAmount} cents (€${(unitAmount / 100).toFixed(2)})`);
+      console.log(`  â†’ Unit amount: ${unitAmount} cents (â‚¬${(unitAmount / 100).toFixed(2)})`);
       
       return {
         price_data: {
@@ -1295,7 +1311,7 @@ app.post('/api/stripe/create-checkout-session', express.json(), async (req, res)
       };
     });
     
-    console.log('✅ Line items created:', lineItems.length);
+    console.log('âœ… Line items created:', lineItems.length);
     
     // Add delivery fee as a line item
     if (deliveryFee > 0) {
@@ -1347,7 +1363,7 @@ app.post('/api/stripe/create-checkout-session', express.json(), async (req, res)
       },
     });
     
-    console.log(`✅ Checkout session created for order ${order.orderNumber}`);
+    console.log(`âœ… Checkout session created for order ${order.orderNumber}`);
     
     res.json({
       sessionId: session.id,
@@ -1358,7 +1374,7 @@ app.post('/api/stripe/create-checkout-session', express.json(), async (req, res)
     });
     
   } catch (error) {
-    console.error('❌ Error creating checkout session:', error);
+    console.error('âŒ Error creating checkout session:', error);
     console.error('Error details:', {
       message: error.message,
       type: error.type,
@@ -1375,7 +1391,7 @@ app.post('/api/stripe/create-checkout-session', express.json(), async (req, res)
 
 // POST /api/stripe/webhook - DISABLED: Use dedicated serverless function at api/stripe/webhook.js
 app.post('/api/stripe/webhook', express.json(), async (req, res) => {
-  console.error('❌ WRONG ENDPOINT: This Express webhook handler should not be called!');
+  console.error('âŒ WRONG ENDPOINT: This Express webhook handler should not be called!');
   console.error('   Stripe should be calling the dedicated serverless function at api/stripe/webhook.js');
   console.error('   If you see this message, the routing is wrong or the serverless function failed to load.');
   
@@ -1389,29 +1405,29 @@ app.post('/api/stripe/webhook', express.json(), async (req, res) => {
 // Helper: Handle checkout session completed
 async function handleCheckoutSessionCompleted(session) {
   try {
-    console.log(`📧 [WEBHOOK] Checkout session completed: ${session.id}`);
+    console.log(`ðŸ“§ [WEBHOOK] Checkout session completed: ${session.id}`);
     console.log(`   Payment Status: ${session.payment_status}`);
     console.log(`   Payment Intent: ${session.payment_intent}`);
     
-    console.log('🔌 Checking database connection...');
+    console.log('ðŸ”Œ Checking database connection...');
     if (!(await ensureDbConnection())) {
-      console.error('❌ [WEBHOOK] Database unavailable for checkout session handling');
+      console.error('âŒ [WEBHOOK] Database unavailable for checkout session handling');
       return;
     }
-    console.log('✅ Database connected');
+    console.log('âœ… Database connected');
 
     // Find order by session ID
-    console.log(`🔍 [WEBHOOK] Looking for order with session ID: ${session.id}`);
+    console.log(`ðŸ” [WEBHOOK] Looking for order with session ID: ${session.id}`);
     const order = await prisma.order.findFirst({
       where: { stripeSessionId: session.id },
     });
     
     if (order) {
-      console.log(`✅ [WEBHOOK] Found order: ${order.orderNumber} (DB ID: ${order.id})`);
+      console.log(`âœ… [WEBHOOK] Found order: ${order.orderNumber} (DB ID: ${order.id})`);
       console.log(`   Current Status: ${order.status}`);
       console.log(`   Current Payment: ${order.paymentStatus}`);
       
-      console.log('💾 [WEBHOOK] Updating order to CONFIRMED...');
+      console.log('ðŸ’¾ [WEBHOOK] Updating order to CONFIRMED...');
       await prisma.order.update({
         where: { id: order.id },
         data: {
@@ -1421,47 +1437,47 @@ async function handleCheckoutSessionCompleted(session) {
           stripePaymentIntentId: session.payment_intent,
         },
       });
-      console.log(`✅ [WEBHOOK] Order ${order.orderNumber} updated to CONFIRMED`);
+      console.log(`âœ… [WEBHOOK] Order ${order.orderNumber} updated to CONFIRMED`);
       
       // Get updated order with all details
-      console.log('📋 [WEBHOOK] Fetching updated order details...');
+      console.log('ðŸ“‹ [WEBHOOK] Fetching updated order details...');
       const updatedOrder = await prisma.order.findUnique({
         where: { id: order.id },
       });
       
-      console.log(`📧 [WEBHOOK] Preparing to send notifications for order ${updatedOrder.orderNumber}...`);
+      console.log(`ðŸ“§ [WEBHOOK] Preparing to send notifications for order ${updatedOrder.orderNumber}...`);
       console.log(`   Customer email: ${updatedOrder.customerEmail}`);
       console.log(`   Resend configured: ${resend ? 'YES' : 'NO'}`);
       console.log(`   Test mode: ${RESEND_TEST_MODE}`);
       console.log(`   Test email: ${RESEND_TEST_EMAIL}`);
       
       // Send WhatsApp notification to restaurant
-      console.log('📱 [WEBHOOK] Logging WhatsApp notification...');
+      console.log('ðŸ“± [WEBHOOK] Logging WhatsApp notification...');
       logWhatsAppNotification(updatedOrder);
       
       // Send email notifications
-      console.log('📧 [WEBHOOK] Sending customer confirmation email...');
+      console.log('ðŸ“§ [WEBHOOK] Sending customer confirmation email...');
       try {
         const customerEmailResult = await sendCustomerConfirmationEmail(updatedOrder);
-        console.log(`   ✅ Customer email result:`, customerEmailResult ? 'SUCCESS' : 'FAILED');
+        console.log(`   âœ… Customer email result:`, customerEmailResult ? 'SUCCESS' : 'FAILED');
       } catch (emailError) {
-        console.error('   ❌ Customer email error:', emailError.message);
+        console.error('   âŒ Customer email error:', emailError.message);
       }
       
-      console.log('📧 [WEBHOOK] Sending owner notification email...');
+      console.log('ðŸ“§ [WEBHOOK] Sending owner notification email...');
       try {
         const ownerEmailResult = await sendOwnerNotificationEmail(updatedOrder);
-        console.log(`   ✅ Owner email result:`, ownerEmailResult ? 'SUCCESS' : 'FAILED');
+        console.log(`   âœ… Owner email result:`, ownerEmailResult ? 'SUCCESS' : 'FAILED');
       } catch (emailError) {
-        console.error('   ❌ Owner email error:', emailError.message);
+        console.error('   âŒ Owner email error:', emailError.message);
       }
       
-      console.log('✅ [WEBHOOK] All notifications sent successfully');
+      console.log('âœ… [WEBHOOK] All notifications sent successfully');
     } else {
-      console.warn(`⚠️  [WEBHOOK] Order not found for session: ${session.id}`);
+      console.warn(`âš ï¸  [WEBHOOK] Order not found for session: ${session.id}`);
     }
   } catch (error) {
-    console.error('❌ [WEBHOOK] Error handling checkout session:', error);
+    console.error('âŒ [WEBHOOK] Error handling checkout session:', error);
     console.error('   Stack trace:', error.stack);
   }
 }
@@ -1488,7 +1504,7 @@ async function handlePaymentSuccess(paymentIntent) {
         },
       });
       
-      console.log(`✅ Payment succeeded for order ${order.orderNumber}`);
+      console.log(`âœ… Payment succeeded for order ${order.orderNumber}`);
       
       // Get updated order with all details
       const updatedOrder = await prisma.order.findUnique({
@@ -1528,7 +1544,7 @@ async function handlePaymentFailure(paymentIntent) {
         },
       });
       
-      console.log(`❌ Payment failed for order ${order.orderNumber}`);
+      console.log(`âŒ Payment failed for order ${order.orderNumber}`);
     }
   } catch (error) {
     console.error('Error handling payment failure:', error);
@@ -1672,7 +1688,7 @@ app.post('/api/orders/:id/send-emails', express.json(), async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    console.log(`📧 Manual email trigger for order ${order.orderNumber}...`);
+    console.log(`ðŸ“§ Manual email trigger for order ${order.orderNumber}...`);
     
     const results = {
       orderNumber: order.orderNumber,
@@ -1683,7 +1699,7 @@ app.post('/api/orders/:id/send-emails', express.json(), async (req, res) => {
     };
 
     // Send customer confirmation email
-    console.log('📧 Sending customer confirmation email...');
+    console.log('ðŸ“§ Sending customer confirmation email...');
     const customerResult = await sendCustomerConfirmationEmail(order);
     results.customerEmail = {
       sent: Boolean(customerResult),
@@ -1691,7 +1707,7 @@ app.post('/api/orders/:id/send-emails', express.json(), async (req, res) => {
     };
 
     // Send owner notification email
-    console.log('📧 Sending owner notification email...');
+    console.log('ðŸ“§ Sending owner notification email...');
     const ownerResult = await sendOwnerNotificationEmail(order);
     results.ownerEmail = {
       sent: Boolean(ownerResult),
@@ -1736,7 +1752,7 @@ app.post('/api/orders/whatsapp', express.json(), async (req, res) => {
       },
     });
     
-    console.log(`📱 WhatsApp order created: ${order.orderNumber}`);
+    console.log(`ðŸ“± WhatsApp order created: ${order.orderNumber}`);
     
     res.json({ success: true, order });
   } catch (error) {
@@ -1813,13 +1829,19 @@ app.post('/api/admin/store-status', express.json(), async (req, res) => {
       }
     });
 
-    console.log(`🏪 Store status updated: ${isOpen ? 'OPEN' : 'CLOSED'} by ${updatedBy || 'admin'}`);
+    console.log(`ðŸª Store status updated: ${isOpen ? 'OPEN' : 'CLOSED'} by ${updatedBy || 'admin'}`);
     
     res.json(status);
   } catch (error) {
     console.error('Error updating store status:', error);
     res.status(500).json({ error: 'Failed to update store status' });
   }
+});
+
+// Test endpoint for debugging
+app.get('/test', (req, res) => {
+  console.log('ðŸ§ª Test endpoint hit!');
+  res.json({ ok: true, message: 'Server is working!' });
 });
 
 // ============================================================================
@@ -1860,3 +1882,5 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
     process.exit(0);
   });
 }
+
+

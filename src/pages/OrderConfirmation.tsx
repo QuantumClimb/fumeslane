@@ -163,7 +163,7 @@ export default function OrderConfirmation() {
                           )}
                         </div>
                         <span className="font-semibold whitespace-nowrap ml-4">
-                          €{item.totalPrice.toFixed(2)}
+                          ₹{(item.totalPrice / 100).toFixed(2)}
                         </span>
                       </div>
                     </div>

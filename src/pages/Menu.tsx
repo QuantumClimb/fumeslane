@@ -89,21 +89,11 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
 
   const imageUrl = (() => {
     try {
-      // Priority 1: Check if image is in database (no placeholder imageUrl, or has placeholder)
-      // If imageUrl is null/empty OR is a placeholder, try database first
-      if (!item.imageUrl || item.imageUrl.includes('placeholder')) {
-        if (item.id) {
-          const baseUrl = import.meta.env.DEV 
-            ? 'https://namastecurryhouse.vercel.app/api' 
-            : '/api';
-          return `${baseUrl}/images/${item.id}`;
-        }
-      }
-      // Priority 2: Use imageUrl if it exists and is not a placeholder
+      // Use imageUrl from database if available
       if (item.imageUrl && !item.imageUrl.includes('placeholder')) {
         return item.imageUrl;
       }
-      // Priority 3: Fallback to placeholder
+      // Fallback to placeholder
       return placeholderImg;
     } catch (error) {
       return placeholderImg;
@@ -128,10 +118,10 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
 
         {/* Center: Content */}
         <div className="flex-1 px-3 py-1 min-w-0 text-left">
-          <h4 className="text-base font-bold text-foreground truncate mb-1">{displayName}</h4>
-          <p className="text-xs text-foreground/60 line-clamp-1 mb-2">{displayDescription}</p>
+          <h4 className="text-base font-bold text-foreground dark:text-gray-200 truncate mb-1">{displayName}</h4>
+          <p className="text-xs text-foreground/60 dark:text-gray-200 line-clamp-1 mb-2">{displayDescription}</p>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-accent">€{item.price.toFixed(2)}</span>
+            <span className="text-sm font-bold text-accent">₹{(item.price / 100).toFixed(2)}</span>
           </div>
         </div>
 
@@ -174,10 +164,10 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
         </div>
         <CardContent className="p-6">
           <div className="flex justify-between items-start mb-3">
-            <h4 className="text-xl font-bold text-foreground">{displayName}</h4>
+            <h4 className="text-xl font-bold text-foreground dark:text-gray-200">{displayName}</h4>
             <span className="text-lg font-bold text-accent">€{item.price.toFixed(2)}</span>
           </div>
-          <p className="text-foreground/70 mb-4 leading-relaxed">{displayDescription}</p>
+          <p className="text-foreground/70 dark:text-gray-200 mb-4 leading-relaxed">{displayDescription}</p>
           <div className="flex justify-between items-center gap-3">
             <div className="flex items-center space-x-2 flex-1 min-w-0">
               {item.namePt && (
