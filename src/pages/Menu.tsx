@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ShoppingCart, AlertCircle, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ShoppingCart, AlertCircle, Clock, X } from "lucide-react";
 import { MenuCategory, MenuItem } from "../types/menu";
 import { QuantityStepper } from "../components/QuantityStepper";
 import { useItemCartQuantity } from "../hooks/useCartQuantity";
@@ -29,7 +30,7 @@ const MenuSection = ({ items, title, isStoreClosed }: { items: MenuItem[], title
   return (
     <div className="space-y-6">
       <h3 className="text-3xl font-bold text-primary mb-8">{title}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map((item, index) => (
           <MenuItemCard key={item.id || index} item={item} placeholderImg={placeholderImg} isStoreClosed={isStoreClosed} />
         ))}
@@ -40,6 +41,7 @@ const MenuSection = ({ items, title, isStoreClosed }: { items: MenuItem[], title
 
 const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem, placeholderImg: string, isStoreClosed: boolean }) => {
   const { t, tLegacy } = useLanguage();
+  const [showModal, setShowModal] = useState(false);
   
   // Only subscribe to actions, not items (to avoid re-renders)
   const addItem = useCartStore(state => state.addItem);
@@ -102,10 +104,13 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
 
   return (
     <>
-      {/* Mobile Layout - Horizontal Card */}
-      <Card className="md:hidden bg-card/50 backdrop-blur-sm border-primary/20 neon-glow overflow-hidden group flex flex-row items-center p-3 relative menu-item-card">
-        {/* Left: Product Image */}
-        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-lg">
+      {/* Mobile Layout - Vertical Card (Clickable) */}
+      <Card 
+        className="md:hidden rounded-xl bg-card/50 backdrop-blur-sm border-primary/20 neon-glow overflow-hidden group menu-item-card cursor-pointer"
+        onClick={() => setShowModal(true)}
+      >
+        {/* Product Image */}
+        <div className="relative h-40 overflow-hidden">
           <img
             src={imageUrl}
             alt={displayName}
@@ -116,40 +121,141 @@ const MenuItemCard = ({ item, placeholderImg, isStoreClosed }: { item: MenuItem,
           />
         </div>
 
-        {/* Center: Content */}
-        <div className="flex-1 px-3 py-1 min-w-0 text-left">
-          <h4 className="text-base font-bold text-foreground dark:text-gray-200 truncate mb-1">{displayName}</h4>
-          <p className="text-xs text-foreground/60 dark:text-gray-200 line-clamp-1 mb-2">{displayDescription}</p>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-accent">₹{(item.price / 100).toFixed(2)}</span>
+        {/* Content */}
+        <CardContent className="p-4">
+          <h4 className="text-base font-bold text-foreground dark:text-gray-200 mb-2">{displayName}</h4>
+          <p className="text-xs text-foreground/60 dark:text-gray-200 line-clamp-2 mb-3">{displayDescription}</p>
+          
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-base font-bold text-accent">₹{(item.price / 100).toFixed(2)}</span>
+            <span className="text-xs text-muted-foreground">Tap for details</span>
           </div>
-        </div>
-
-        {/* Right: Add Button */}
-        {!isStoreClosed && (
-          <div className="flex-shrink-0">
-            {isInCart ? (
-              <QuantityStepper
-                quantity={cartQuantity}
-                onIncrement={handleIncrement}
-                onDecrement={handleDecrement}
-                size="sm"
-              />
-            ) : (
-              <Button 
-                onClick={handleAddToCart}
-                size="sm"
-                className="rounded-full px-6"
-              >
-                {t('menu.addToCart')}
-              </Button>
-            )}
-          </div>
-        )}
+        </CardContent>
       </Card>
 
+      {/* Mobile Product Details Modal */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{displayName}</DialogTitle>
+            {item.brand && (
+              <DialogDescription className="text-base font-medium">
+                by {item.brand}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Product Image */}
+            <div className="relative h-64 overflow-hidden rounded-lg">
+              <img
+                src={imageUrl}
+                alt={displayName}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = placeholderImg;
+                }}
+              />
+            </div>
+
+            {/* Price */}
+            <div className="flex items-center justify-between">
+              <span className="text-2xl font-bold text-accent">₹{(item.price / 100).toFixed(2)}</span>
+              {item.volume && (
+                <span className="text-sm text-muted-foreground">{item.volume}</span>
+              )}
+            </div>
+
+            {/* Description */}
+            <div>
+              <h4 className="font-semibold mb-2">Description</h4>
+              <p className="text-sm text-foreground/80 dark:text-gray-300">{displayDescription}</p>
+            </div>
+
+            {/* Fragrance Details */}
+            {(item.concentration || item.gender || item.fragranceFamily) && (
+              <div className="space-y-2">
+                <h4 className="font-semibold dark:text-white">Details</h4>
+                {item.concentration && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground dark:text-gray-300">Concentration:</span>
+                    <span className="font-medium dark:text-white">{item.concentration}</span>
+                  </div>
+                )}
+                {item.gender && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground dark:text-gray-300">Gender:</span>
+                    <span className="font-medium dark:text-white">{item.gender}</span>
+                  </div>
+                )}
+                {item.fragranceFamily && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground dark:text-gray-300">Family:</span>
+                    <span className="font-medium dark:text-white">{item.fragranceFamily}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Notes */}
+            {(item.topNotes || item.middleNotes || item.baseNotes) && (
+              <div className="space-y-3">
+                <h4 className="font-semibold dark:text-white">Fragrance Notes</h4>
+                {item.topNotes && (
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground dark:text-gray-300">Top Notes: </span>
+                    <span className="text-sm dark:text-white">{item.topNotes}</span>
+                  </div>
+                )}
+                {item.middleNotes && (
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground dark:text-gray-300">Middle Notes: </span>
+                    <span className="text-sm dark:text-white">{item.middleNotes}</span>
+                  </div>
+                )}
+                {item.baseNotes && (
+                  <div>
+                    <span className="text-sm font-medium text-muted-foreground dark:text-gray-300">Base Notes: </span>
+                    <span className="text-sm dark:text-white">{item.baseNotes}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Add to Cart Section */}
+            {!isStoreClosed && (
+              <div className="flex items-center justify-between gap-4 pt-4 border-t">
+                {isInCart ? (
+                  <>
+                    <span className="text-sm font-medium">Quantity:</span>
+                    <QuantityStepper
+                      quantity={cartQuantity}
+                      onIncrement={handleIncrement}
+                      onDecrement={handleDecrement}
+                      size="default"
+                    />
+                  </>
+                ) : (
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToCart();
+                    }}
+                    className="w-full gap-2"
+                    size="lg"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Add to Cart - ₹{(item.price / 100).toFixed(2)}
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Desktop Layout - Vertical Card */}
-      <Card className="hidden md:block bg-card/50 backdrop-blur-sm border-primary/20 neon-glow overflow-hidden group menu-item-card">
+      <Card className="hidden md:block rounded-xl md:rounded-3xl bg-card/50 backdrop-blur-sm border-primary/20 neon-glow overflow-hidden group menu-item-card">
         {/* Product Image */}
         <div className="relative h-48 overflow-hidden">
           <img
